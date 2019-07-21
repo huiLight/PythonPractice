@@ -5,62 +5,54 @@
 from urllib.parse import urljoin
 from jsonpath import jsonpath
 import requests
-import ssl
+import json
 import re
 
-def get_page_countent(content):
-    results = {}
-    urllist = re.findall(r'<a class="question_link" href=".*?".*?>[\s\S]*?</a>', content.text)
-    for u in urllist:
-        link = re.sub('<a .*? href="(.*?)"[\\s\\S]*?</a>', lambda m: m.group(1), u)
-        link = urljoin(base_url, link)
-
-        title = re.sub('<a .*?>\\s*(.*?)\\s*</a>', lambda m: m.group(1), u)
-        results[title] = link
-    return results
-
-def main(key_word):
+def get_question(key_word):
     headers = {'user-agent':'Baiduspider'}
-    proxies = {}#{'http': 'http://122.114.31.177:808'}
-    base_url = 'https://www.zhihu.com/search?type=content&q=沟通'
+    proxies = {'http': 'http://122.114.31.177:808'}
     
     seed_url = ('https://www.zhihu.com/api/v4/search_v3?t=general&q='
                 + key_word
-                + '&correction=1&offset=20'
-                + '&limit=20&lc_idx=26'
+                + '&correction=1&offset=0'
+                + '&limit=20&lc_idx=6'
                 + '&show_all_topics=0&search_hash_id=6f18e0b24a1649bb96c89526e3616adf&vertical_info=0%2C1%2C1%2C0%2C0%2C0%2C0%2C0%2C0%2C1'
                 )
 
+    results = {}
 
-    # 处理第一部分，首先打开网页，获取数据
-    content = requests.get(base_url, headers=headers, proxies=proxies)
-    results = get_page_countent(content)
+    # https验证错误，简单的处理办法是在get方法中加入verify参数，并设为false。
+    content = requests.get(seed_url, headers=headers, proxies=proxies, verify=False)
 
-    # 处理第二部分，获取json数据, https验证错误，简单的处理办法是在get方法中加入verify参数，并设为false。
-    content = requests.get(seed_url, headers=headers, proxies=proxies, verify=False).text
+    # content.text返回为字符串，需要先转化为json才能用jsonpath
+    content = json.loads(content.text)
 
-    # 获取第二页及之后内容
-    while not jsonpath(content, '$.paging.is_end'):
+    # jsonpath返回一个list，哪怕结果只有一个
+    while not jsonpath(content, '$.paging.is_end')[0]:
+
         title = jsonpath(content, '$..question.name')
         id = jsonpath(content, '$..question.id')
-        link = urljoin('https://www.zhihu.com/question', id)
-        if not title:
-            continue
-        for i in len(title):
-            results[title[i]] = link[i]
+        if title:
+            for i in range(len(title)):
+                t = title[i].replace('<em>', '').replace('</em>', '')
+                results[t] = urljoin('https://www.zhihu.com/question/', id[i])
 
-        seed_url = josnpath(content, '$.paging.next')
-        requests.get(seed_url, headers=headers, proxies=proxies, verify=False).text
+        # 加载并格式化下一页内容
+        seed_url = jsonpath(content, '$.paging.next')[0]
+        content = requests.get(seed_url, headers=headers, proxies=proxies, verify=False)
+        content = json.loads(content.text)
 
 
-    print(results)
+    return results
+    
 
 if __name__ == '__main__':
-    import urllib
-    # request = urllib.request.Request(url='https://www.zhihu.com/', headers={'user-agent':'Baiduspider'}) 
-    # context = ssl._create_unverified_context()
-    # web_page = urllib.request.urlopen(request, context=context)
-    # ssl._create_default_https_context = ssl._create_unverified_context
+
     # 直接取消所有urllib3的警告
     requests.packages.urllib3.disable_warnings()
-    main('沟通')
+    key_word = '幽默'
+    results = get_question(key_word)
+    for k, v in results.items():
+        print(k, v)
+    print('-'*20)
+    print('Total %d question pages.'%len(results))
