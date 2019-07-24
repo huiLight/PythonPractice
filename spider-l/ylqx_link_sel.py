@@ -12,21 +12,40 @@ def main():
     time.sleep(10)
 
     # 如果未加载重试3次
-    for _ in range(3):
+    for i in range(3):
         try:
-            driver.find_element_by_xpath("//td[contains(text(), '医疗器械经营企业（许可）')]").click()
+            driver.find_element_by_xpath("//td[contains(text(), '医疗器械经营企业（备案）')]").click()
         except:
             time.sleep(10)
-            driver.find_element_by_xpath("//td[text()='医疗器械经营企业（许可）']").click()
+            driver.find_element_by_xpath("//td[text()='医疗器械经营企业（备案）']").click()
+        else:
+            break
+
+def write_current_page(page):
+    with open('error.ini', 'w') as f:
+        f.write(str(page))
+
+def reopen_the_page(page_num):
+    write_current_page(page_num)
+    # 发现该元素，重新打开该页面
+    driver.find_element_by_xpath("//td[contains(text(), '医疗器械经营企业（备案）')]").click()
+    for k in range(5):
+        try:
+            input_page = driver.find_element_by_xpath('//*[@id="goInt"]')
+            input_page.clear()
+            input_page.send_keys(str(page_num))
+            driver.find_element_by_xpath("//input[@src='images/dataanniu_11.gif']").click()
+        except:
+            driver.find_element_by_xpath("//td[contains(text(), '医疗器械经营企业（备案）')]").click()
+            time.sleep(10)
         else:
             break
 
 def get_urls(c):
     c.send(None)
-    start_page = 1192
     time.sleep(10)
     # 循环点击下一页
-    page_num = 6543
+    page_num = 14157
 
     # 进入第一页
     for _ in range(3):
@@ -36,44 +55,41 @@ def get_urls(c):
             input_page.send_keys(str(start_page))
             driver.find_element_by_xpath("//input[@src='images/dataanniu_11.gif']").click()
         except:
-            driver.find_element_by_xpath("//td[contains(text(), '医疗器械经营企业（许可）')]").click()
+            driver.find_element_by_xpath("//td[contains(text(), '医疗器械经营企业（备案）')]").click()
             time.sleep(10)
         else:
             break
 
-    for i in range(start_page, page_num):
+    for i in range(start_page, page_num+1):
 
         results = []
-        time.sleep(random.randint(1, 5))
+        tt = random.random()
+        time.sleep(tt if tt > 0.3 else 0.3)
 
         # 获取页面中的链接
-        # 尝试5分钟，如果加载不出来则退出
-        for _ in range(100):
-            try:
-                url_list = driver.find_elements_by_xpath("//div[@id='content']/table[2]/tbody/tr/td/p/a")
-            except:
+        # 尝试，如果加载不出来则退出
+        for j in range(1, 200):
+            url_list = driver.find_elements_by_xpath("//div[@id='content']/table[2]/tbody/tr/td/p/a")
+            if url_list:
+                break
+            else:
+                print(f'\rinpage {i} retry times: {j}')
+                time.sleep(5)
+
                 try:
                     driver.find_element_by_xpath('//span[text()="服务器未返回数据"]')
                 except:
-                    time.sleep(3)
+                    time.sleep(1)
                 else:
-                    # 发现该元素，重新打开该页面
-                    for __ in range(5):
-                        try:
-                            input_page = driver.find_element_by_xpath('//*[@id="goInt"]')
-                            input_page.clear()
-                            input_page.send_keys(str(i))
-                            driver.find_element_by_xpath("//input[@src='images/dataanniu_11.gif']").click()
-                        except:
-                            driver.find_element_by_xpath("//td[contains(text(), '医疗器械经营企业（许可）')]").click()
-                            time.sleep(10)
-                        else:
-                            break
-            else:
-                break
+                    reopen_the_page(i)
+
+                if j % 20 == 0:
+                    reopen_the_page(i)
         else:
+            write_current_page(i)
             with open('error.log', 'a') as f:
-                f.write(f'医疗器械经营企业（许可） Error in page {i}. {time.ctime()}')
+                f.write(f'医疗器械经营企业（备案） Error in page {i}. {time.ctime()}')
+            raise Exception('Page Load Error')
 
         for url in url_list:
             # 将获取的链接格式化为可用链接
@@ -84,9 +100,11 @@ def get_urls(c):
         pros(i, page_num)
         
         # 点击下一页
-        driver.find_element_by_xpath("//img[@src='images/dataanniu_07.gif']").click()
-
-
+        try:
+            driver.find_element_by_xpath("//img[@src='images/dataanniu_07.gif']").click()
+        except Exception as e:
+            write_current_page(page)
+            raise e
 
         r = c.send(results)
 
@@ -96,7 +114,7 @@ def save():
     r = ''
     while True:
         results = yield r
-        with open('test1.txt', 'a') as f:
+        with open('ylba.txt', 'a') as f:
             for i in results:
                 f.write(i+'\n')
 
@@ -120,9 +138,14 @@ if __name__ == '__main__':
 
     # 以代理方式启动 firefox
     # driver  = webdriver.Firefox(profile)
+    with open('error.ini', 'r') as f:
+        start_page = int(f.read().strip())
+
     driver = webdriver.Firefox()
     driver.get(seed_url)
     main()
     c = save()
     get_urls(c)
     driver.close()
+
+    #2214页可能需要补采
