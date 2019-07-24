@@ -25,11 +25,11 @@ def write_current_page(page):
     with open('error.ini', 'w') as f:
         f.write(str(page))
 
-def reopen_the_page(page_num):
+def open_the_page(page_num):
     write_current_page(page_num)
     # 发现该元素，重新打开该页面
     driver.find_element_by_xpath("//td[contains(text(), '医疗器械经营企业（备案）')]").click()
-    for k in range(5):
+    for _ in range(5):
         try:
             input_page = driver.find_element_by_xpath('//*[@id="goInt"]')
             input_page.clear()
@@ -47,18 +47,7 @@ def get_urls(c):
     # 循环点击下一页
     page_num = 14157
 
-    # 进入第一页
-    for _ in range(3):
-        try:
-            input_page = driver.find_element_by_xpath('//*[@id="goInt"]')
-            input_page.clear()
-            input_page.send_keys(str(start_page))
-            driver.find_element_by_xpath("//input[@src='images/dataanniu_11.gif']").click()
-        except:
-            driver.find_element_by_xpath("//td[contains(text(), '医疗器械经营企业（备案）')]").click()
-            time.sleep(10)
-        else:
-            break
+    open_the_page(start_page)
 
     for i in range(start_page, page_num+1):
 
@@ -81,10 +70,10 @@ def get_urls(c):
                 except:
                     time.sleep(1)
                 else:
-                    reopen_the_page(i)
+                    open_the_page(i)
 
                 if j % 20 == 0:
-                    reopen_the_page(i)
+                    open_the_page(i)
         else:
             write_current_page(i)
             with open('error.log', 'a') as f:
