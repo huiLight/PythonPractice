@@ -33,7 +33,7 @@ def get_page(url):
             continue
         
         try:
-            driver.find_element_by_xpath("//center[1]/h1[contains(text(),'403']")
+            driver.find_element_by_xpath("//center[1]/h1[contains(text(),'403')]")
         except:
             pass
         else:
