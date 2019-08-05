@@ -26,6 +26,8 @@
 
 
 from scrapy.exporters import JsonLinesItemExporter
+from scrapy.exceptions import DropItem
+
 
 class QsbkPipeline(object):
 
@@ -35,6 +37,9 @@ class QsbkPipeline(object):
                                         encoding='utf-8')
 
     def process_item(self, item, spider):
+        if int(item['like']) < 1000:
+            raise DropItem("Missing price in %s" % item)
+
         self.exporter.export_item(item)
         return item
 
