@@ -1,5 +1,5 @@
 import scrapy
-
+import time
 
 class QsbkSpider(scrapy.Spider):
     name = "qsbk"
@@ -21,8 +21,13 @@ class QsbkSpider(scrapy.Spider):
         for content_block in content_blocks:
 
             href = content_block.xpath(".//a[@class='contentHerf']/@href").get()
+            time.sleep(0.2) # 程序跑太快访问会被拒绝
             yield response.follow(href, self.content_parse)
 
+        # 点击下一页, 如果找不到则返回None
+        next_page = response.xpath("//ul[@class='pagination']/li/a/span[@class='next']/../@href").get()
+        if next_page is not None:
+            yield response.follow(next_page, self.parse)
 
     def content_parse(self, response):
 
