@@ -39,15 +39,7 @@ class TouchClouds(object):
         if not urls:
             raise Exception('urls not exist.')
         for url in urls:
-            for _ in range(self.retry_times):
-                try:
-                    self.driver.get(url)
-                except Exception as e:
-                    if _ == self.retry_times-1:
-                        raise e
-                    time.sleep(0.3)
-                else:
-                    break
+            self.execute(self.driver.get, url)
             self.init()
 
 
@@ -56,30 +48,15 @@ class TouchClouds(object):
         接受一个xpath作为参数，
         点击该元素
         """
-        for _ in range(self.retry_times):
-            try:
-                self.driver.find_element_by_xpath(xpath).click()
-            except Exception as e:
-                if _ == self.retry_times-1:
-                    raise e
-                time.sleep(0.3)
-            else:
-                break
+        self.execute(self.driver.find_element_by_xpath, xpath).click()
+
 
     def input(self, xpath, strings):
 
-        for _ in range(self.retry_times):
-            try:
-                element = self.driver.find_element_by_xpath(xpath)
-            except Exception as e:
-                if _ == self.retry_times-1:
-                    raise e
+        element = self.execute(self.driver.find_element_by_xpath, xpath)
+        element.clear()
+        element.send_keys(strings)
 
-                time.sleep(0.3)
-            else:
-                element.clear()
-                element.send_keys(strings)
-                break
 
 
 
@@ -117,6 +94,6 @@ if __name__ == '__main__':
     # TouchClouds()
     tc = TouchClouds(test_mode = True)
     # tc.click(True)
-        
-
-    tc.execute(tc.driver.find_element_by_xpath, False).click()
+    tc.urls = ['www.baidu.com', 'google.com']
+    tc.open()
+    tc.input(True, "Hello")
