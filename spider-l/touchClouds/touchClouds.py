@@ -11,6 +11,11 @@ class TouchClouds(object):
 
     def __init__(self):
         self.retry_times = 5
+        # The page load timeout seconds.
+        # Todo:: move the items of setting to setting.py and load them from it.
+        self.load_timeout = 8
+
+        self.driver.set_page_load_timeout(self.load_timeout)
         self.open()
 
 
@@ -30,7 +35,14 @@ class TouchClouds(object):
         if not urls:
             raise Exception('urls not exist.')
         for url in urls:
-            self.driver.get(url)
+            for _ in range(self.retry_times):
+                try:
+                    self.driver.get(url)
+                except Exception as e:
+                    if _ == self.retry_times-1:
+                        raise e
+                    time.sleep(0.3)
+
             self.init()
 
 
@@ -42,7 +54,7 @@ class TouchClouds(object):
         for _ in range(self.retry_times):
             try:
                 self.driver.find_element_by_xpath(xpath).click()
-            except:
+            except Exception as e:
                 if _ == self.retry_times-1:
                     raise e
                 time.sleep(0.3)
