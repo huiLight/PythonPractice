@@ -6,17 +6,21 @@ from selenium import webdriver
 
 class TouchClouds(object):
     
-    driver = webdriver.Chrome()
 
 
-    def __init__(self):
+    def __init__(self, test_mode=False):
         self.retry_times = 5
         # The page load timeout seconds.
         # Todo:: move the items of setting to setting.py and load them from it.
         self.load_timeout = 8
+        if test_mode:
+            from tcTestDriver import TcTestDriver
+            self.driver = TcTestDriver()
+        else:
+            self.driver = webdriver.Chrome()
 
         self.driver.set_page_load_timeout(self.load_timeout)
-        self.open()
+        # self.open()
 
 
     def init(self):
@@ -42,7 +46,8 @@ class TouchClouds(object):
                     if _ == self.retry_times-1:
                         raise e
                     time.sleep(0.3)
-
+                else:
+                    break
             self.init()
 
 
@@ -58,7 +63,8 @@ class TouchClouds(object):
                 if _ == self.retry_times-1:
                     raise e
                 time.sleep(0.3)
-
+            else:
+                break
 
     def input(self, xpath, strings):
 
@@ -73,6 +79,7 @@ class TouchClouds(object):
             else:
                 element.clear()
                 element.send_keys(strings)
+                break
 
 
 
@@ -82,9 +89,34 @@ class TouchClouds(object):
         """
         pass
 
+
+    def execute(self, fun, *args):
+        """
+        将重试提取出来，接收函数和参数列表
+        当超过重试次数后，将错误信息写入日志，并将异常抛出
+        args:: fun 要执行的函数名
+        args:: args 传递给function的参数
+        return:: function执行结果
+        """
+        for _ in range(self.retry_times):
+            try:
+                result = fun(*args)
+            except Exception as e:
+                if _ == self.retry_times-1:
+                    # TODO:: write the error message into log
+                    raise e
+            else:
+                return result
+
+
     def close(self):
         self.driver.close()
 
 
 if __name__ == '__main__':
-    TouchClouds()
+    # TouchClouds()
+    tc = TouchClouds(test_mode = True)
+    # tc.click(True)
+        
+
+    tc.execute(tc.driver.find_element_by_xpath, False).click()
