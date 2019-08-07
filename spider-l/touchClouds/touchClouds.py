@@ -39,11 +39,17 @@ class TouchClouds(object):
         接受一个xpath作为参数，
         点击该元素
         """
-        self.driver.find_element_by_xpath(xpath).click()
+        for _ in range(self.retry_times):
+            try:
+                self.driver.find_element_by_xpath(xpath).click()
+            except:
+                if _ == self.retry_times-1:
+                    raise e
+                time.sleep(0.3)
 
 
     def input(self, xpath, strings):
-        
+
         for _ in range(self.retry_times):
             try:
                 element = self.driver.find_element_by_xpath(xpath)
