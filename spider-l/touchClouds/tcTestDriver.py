@@ -4,6 +4,8 @@
 
 class Element(object):
 
+    text = "Element"
+
     def click(self):
         print("click")
 

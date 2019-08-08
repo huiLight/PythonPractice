@@ -59,16 +59,25 @@ class TouchClouds(object):
         element.send_keys(strings)
 
 
+    def get_text(self, xpath):
+        element = self.execute(self.driver.find_element_by_xpath, xpath, retry_times=1)
+        return element.text.strip()
 
 
-    def extracted(self, **kw):
+    def extracted(self, kw):
         """
         接收一个要获取数据的字典，字典的key是字段名，value是相应的xpath
         """
-        pass
+        if not isinstance(kw, dict):
+            raise Exception("kw must is a dict.")
+        results = {}
+        for k, v in kw.items():
+            result[k] = self.get_text(v)
 
 
-    def execute(self, fun, *args):
+        return results
+
+    def execute(self, fun, *args, retry_times=None):
         """
         将重试提取出来，接收函数和参数列表
         当超过重试次数后，将错误信息写入日志，并将异常抛出
@@ -76,15 +85,18 @@ class TouchClouds(object):
         args:: args 传递给function的参数
         return:: function执行结果
         """
-        for _ in range(self.retry_times):
+        if retry_times is None:
+            retry_times = self.retry_times
+
+        for _ in range(retry_times):
             try:
                 result = fun(*args)
             except Exception as e:
                 if _ == self.retry_times-1:
                     # TODO:: write the error message into log
-                    log_file_name = getattr(name, 'touchClouds') + '.log'
+                    log_file_name = getattr(self, "name", 'touchClouds') + '.log'
                     with open(log_file_name, 'a', encoding='utf-8') as f:
-                        f.write(f"{self.url}, {e.replace('\n', '\t')}, {time.strtime('%Y-%m-%d %H:%M:%S')}\n")
+                        f.write("{}, {}, {}\n".format(self.url, str(e).replace('\n', '\t'),time.strftime('%Y-%m-%d %H:%M:%S')))
                     raise e
                 time.sleep(0.3)
             else:
