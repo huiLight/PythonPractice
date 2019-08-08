@@ -39,6 +39,7 @@ class TouchClouds(object):
         if not urls:
             raise Exception('urls not exist.')
         for url in urls:
+            self.url = url
             self.execute(self.driver.get, url)
             self.init()
 
@@ -81,10 +82,13 @@ class TouchClouds(object):
             except Exception as e:
                 if _ == self.retry_times-1:
                     # TODO:: write the error message into log
+                    log_file_name = getattr(name, 'touchClouds') + '.log'
+                    with open(log_file_name, 'a', encoding='utf-8') as f:
+                        f.write(f"{self.url}, {e.replace('\n', '\t')}, {time.strtime('%Y-%m-%d %H:%M:%S')}\n")
                     raise e
+                time.sleep(0.3)
             else:
                 return result
-
 
     def close(self):
         self.driver.close()
