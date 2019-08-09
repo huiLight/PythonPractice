@@ -1,24 +1,24 @@
 import requests
 import time
 import json
-
+from save import Save
 from jsonpath import jsonpath
 
 
-has_reg = False # 参数是否包含地区参数
+has_reg = False  # 参数是否包含地区
 
 # 加载栏目
 dbcode = {
-"月度数据":"hgyd",
-"季度数据":"hgjd",
-"年度数据":"hgnd",
-"分省月度数据":"fsyd",
-"分省季度数据":"fsjd",
-"分省年度数据":"fsnd",
-"主要城市月度价格":"csyd",
-"主要城市年度数据":"csnd",
-"港澳台月度数据":"gatyd",
-"港澳台年度数据":"gatnd",
+    "月度数据": "hgyd",
+    "季度数据": "hgjd",
+    "年度数据": "hgnd",
+    "分省月度数据": "fsyd",
+    "分省季度数据": "fsjd",
+    "分省年度数据": "fsnd",
+    "主要城市月度价格": "csyd",
+    "主要城市年度数据": "csnd",
+    "港澳台月度数据": "gatyd",
+    "港澳台年度数据": "gatnd",
 }
 
 # id = {"指标":"zb", "地区":"reg"}
@@ -31,19 +31,18 @@ if dbcode[selected_item][0] != 'h':
 
 selected_time = input("请输入采集时间:\n").strip()
 
-path = [selected_item] # 存储路径
+path = [selected_item]  # 存储路径
 
 
 def start():
-    """
-    获取次级目录信息
-    """
+    """获取次级目录信息"""
+
     data = {
-    "id": 'zb',
-    "dbcode": dbcode[selected_item],
-    "wdcode": 'zb',
-    "m": "getTree",
-    }
+            "id": 'zb',
+            "dbcode": dbcode[selected_item],
+            "wdcode": 'zb',
+            "m": "getTree",
+            }
 
     # session = requests.session()
 
@@ -55,13 +54,13 @@ def start():
 
 def get_reg_code_list():
     data = {
-    "m": "getOtherWds",
-    "dbcode": dbcode[selected_item],
-    "rowcode": "zb",
-    "colcode": "sj",
-    "wds": "[]",
-    "k1": str(int(time.time()*1000)),
-    }
+        "m": "getOtherWds",
+        "dbcode": dbcode[selected_item],
+        "rowcode": "zb",
+        "colcode": "sj",
+        "wds": "[]",
+        "k1": str(int(time.time()*1000)),
+        }
 
     reg_code_list = []
 
@@ -76,18 +75,17 @@ def get_reg_code_list():
     # return reg_code_list
 
 
-def select_time(regcode = None):
-    regcode = '110000' #先写死，实验可不可以
+def select_time(regcode=None):
+    regcode = '110000'  # 先写死，实验可不可以
 
-    data_detail = {
-                "m": "QueryData",
-                "dbcode": dbcode[selected_item],
-                "rowcode": "zb",
-                "colcode": "sj",
-                "wds": "[]" if not has_reg else '[{"wdcode":"reg","valuecode":"'+regcode+'"}]', 
-                "dfwds": '[{"wdcode":"sj","valuecode":"'+selected_time+'"}]',
-                "k1": str(int(time.time()*1000))
-                }
+    data_detail = {"m": "QueryData",
+                  "dbcode": dbcode[selected_item],
+                  "rowcode": "zb",
+                  "colcode": "sj",
+                  "wds": "[]" if not has_reg else '[{"wdcode":"reg",\
+                         "valuecode":"'+regcode+'"}]',
+                  "dfwds": '[{"wdcode":"sj","valuecode":"'+selected_time+'"}]',
+                  "k1": str(int(time.time()*1000))}
 
     # 会出错，可以重构
     response = session.get(base_url, params=data_detail)
@@ -109,9 +107,8 @@ def dfs(res):
                 "id": block["id"],
                 "dbcode": block["dbcode"],
                 "wdcode": block["wdcode"],
-                "m": "getTree",
-                }
-            
+                "m": "getTree"}
+
             response = session.post(base_url, data=requests_data)
             res = json.loads(response.text)
 
@@ -122,8 +119,8 @@ def dfs(res):
             # try:
             dfs(res)
             # except:
-                # with open("e.txt", 'a') as f:
-                    # f.write(str(res))
+            #   with open("e.txt", 'a') as f:
+            #       f.write(str(res))
             path.pop()
 
         # 如果是细缆页
@@ -142,22 +139,26 @@ def dfs(res):
             path.pop()
 
 
-def get_data(block, path, regcode = None):
+def get_data(block, path, regcode=None):
     path_data = path[:]
     # 不同的数据请求不一样
     data_detail = {
-                "m": "QueryData",
-                "dbcode": block["dbcode"],
-                "rowcode": "zb",
-                "colcode": "sj",
-                "wds": "[]" if not has_reg else '[{"wdcode":"reg","valuecode":"'+regcode+'"}]',
-                "dfwds": '[{"wdcode":"'+block["wdcode"]+'","valuecode":"'+block["id"]+'"}]',
-                "k1": str(int(time.time()*1000))
-                }
+        "m": "QueryData",
+        "dbcode": block["dbcode"],
+        "rowcode": "zb",
+        "colcode": "sj",
+
+        "wds": "[]" if not has_reg else '[{"wdcode":"reg",\
+               "valuecode":"'+regcode+'"}]',
+
+        "dfwds": '[{"wdcode":"'+block["wdcode"]+'",\
+                 "valuecode":"'+block["id"]+'"}]',
+
+        "k1": str(int(time.time()*1000))}
 
     response = session.get(base_url, params=data_detail)
     res = json.loads(response.text)
-    
+
     # 找到名称与code的映射 需加入unit
     # 包含名称、地区(可能没有)、时间等信息
     nodes = jsonpath(res, '$.returndata.wdnodes[*].nodes')
@@ -167,12 +168,16 @@ def get_data(block, path, regcode = None):
         for _ in node:
             name_code[_['code']] = _['name'] + '^_^' + _['unit']
 
-
     # 获取当前json中全部数据
     data_nodes = jsonpath(res, "$.returndata.datanodes")[0]
 
     for data_node in data_nodes:
-        exc_data = path_data[:]
+        exc_data = []
+        exc_data.append(path_data[0])
+
+        catelogs = "、".join(path_data[1:])
+        exc_data.append(catelogs)
+
         name, unit, reg, sj = get_data_from_code(name_code, data_node['code'])
         exact_data = data_node['data']['data']
         normal_data = data_node['data']['strdata']
@@ -184,15 +189,16 @@ def get_data(block, path, regcode = None):
         exc_data.append(exact_data)
         exc_data.append(unit)
         exc_data.append(reg)
-        
+
         save_data(exc_data)
 
         del exc_data
 
 
 def save_data(data_list):
-    with open(selected_item+selected_time, 'a', encoding='utf-8') as f:
-        f.write(str(data_list)+'\n')
+    # with open(selected_item+selected_time, 'a', encoding='utf-8') as f:
+    #     f.write(str(data_list)+'\n')
+    sv.insert(data_list)
 
 
 def get_data_from_code(name_code, code):
@@ -220,6 +226,11 @@ def get_data_from_code(name_code, code):
 
 if __name__ == '__main__':
     session = requests.session()
-    res = start()
-    select_time()
-    dfs(res)
+    sv = Save()
+    try:
+        res = start()
+        select_time()
+        dfs(res)
+    except:
+        sv.close()
+    sv.close()
