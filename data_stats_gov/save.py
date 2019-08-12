@@ -1,21 +1,20 @@
 import pymysql
+import setting
 
 class Save(object):
 
 
-    def __init__(self, host='127.0.0.1', 
-                user='root',
-                password='root', 
-                charset='utf8',
-                dbname='datastats',
-                tbname='datas'):
-        
-        self.db_name = dbname
-        self.tb_name = tbname
+    def __init__(self):
 
-        self.conn = pymysql.connect(host=host,
-            user=user, password=password,
-            charset=charset)
+        self.load_setting()
+        self.db_name = self.info['database_name']
+        self.tb_name = self.info['table_name']
+        self.conn = pymysql.connect(
+            host = self.info['host'],
+            port = self.info['port'],
+            user = self.info['user'],
+            password = self.info['password'],
+            charset = self.info['charset'])
 
         self.init()
 
@@ -26,31 +25,35 @@ class Save(object):
         self.cursor.execute('USE datastats')
 
         # 采集类别、各层级栏目、指标名称、发布日期、采集时间、指标数值、精确指标数值、数值单位、地区
-        create_table_sql = """CREATE TABLE IF NOT EXISTS {}(
-                            id int not null auto_increment,
-                            kind varchar(30),
-                            catelogs varchar(400),
-                            name varchar(30),
-                            pub_date varchar(30),
-                            run_date datetime,
-                            norm_data varchar(20),
-                            exact_data double,
-                            unit varchar(10),
-                            reg varchar(20),
-                            primary key(id)
-                            );""".format(self.tb_name)
+        create_table_sql = ("CREATE TABLE IF NOT EXISTS {}("
+                            "id int not null auto_increment,"
+                            "kind varchar(50),"
+                            "catelogs varchar(400),"
+                            "name varchar(50),"
+                            "pub_date varchar(50),"
+                            "run_date datetime,"
+                            "norm_data varchar(50),"
+                            "exact_data double,"
+                            "unit varchar(30),"
+                            "reg varchar(30),"
+                            "primary key(id)"
+                            ");").format(self.tb_name)
 
         self.cursor.execute(create_table_sql)
 
 
     def insert(self, datalist):
 
-        sql = "insert into {}(kind,catelogs,name,pub_date,\
-              run_date,norm_data,exact_data,unit,reg)\
-              values(%s,%s,%s,%s,%s,%s,%s,%s,%s)".format(self.tb_name)
+        sql = ("insert into {}(kind,catelogs,name,pub_date,"
+              "run_date,norm_data,exact_data,unit,reg)"
+              "values(%s,%s,%s,%s,%s,%s,%s,%s,%s)").format(self.tb_name)
 
         self.cursor.execute(sql, datalist)
         self.conn.commit()
+
+
+    def load_setting(self):
+        self.info = setting.sql_info
 
 
     def close(self):
@@ -67,4 +70,4 @@ if __name__ == '__main__':
     sv.insert(dat)
 
     time.sleep(10)
-    sv.close
+    sv.close()
