@@ -1,8 +1,11 @@
-import requests
+import os
+import sys
 import time
 import json
-from save import Save
+import requests
 import setting
+
+from save import Save
 from jsonpath import jsonpath
 
 
@@ -17,6 +20,8 @@ class Crawl(object):
         self.base_url = "http://data.stats.gov.cn/easyquery.htm"
         self.reg_code_list = []
         # 加载栏目
+        dbname = ["月度数据","季度数据","季度数据","分省月度数据","分省季度数据","分省年度数据",
+                "主要城市月度价格","主要城市年度数据","港澳台月度数据","港澳台年度数据"]
         self.dbcode = {
             "月度数据": "hgyd",
             "季度数据": "hgjd",
@@ -36,9 +41,11 @@ class Crawl(object):
         if self.has_reg:
             self.reg_code_list = self.get_reg_code_list()
         self.load_dup()
-        self.select_time()
         res = self.get_json_data()
+        self.select_time()
         self.dfs(res)
+        self.regather()
+        self.clean()
 
 
     def get_input_info(self):
@@ -94,12 +101,35 @@ class Crawl(object):
             res = json.loads(response.text)
         except:
             self.save_dup()
-            with open('err.log', 'a') as f:
-                f.write(str(data)+'\n')
+            leak_data = {"data": data, "path": self.path}
+            with open('err.log', 'a', encoding='utf-8') as f:
+                f.write(str(leak_data)+'\n')
             time.sleep(self.load_error_wait_time)
             print('--------------JsonError---------------')
             raise
         return res
+
+
+    def clean(self):
+        """退出时的清理工作"""
+        self.save_dup()
+        self.sv.close()
+        # 删除日志文件
+        logfile = os.path.join(os.getcwd(), 'err.log')
+        os.remove(logfile)
+
+    def regather(self):
+        """补采数据"""
+        with open("err.log", "r", encoding='utf-8') as f:
+            for i in f:
+                data_block = i.strip().replace("'", '"')
+                # print(data_block)
+                data_block = json.loads(data_block)
+                self.path = data_block['path']
+                self.data = data_block['data']
+                res = self.get_json_data(self.data)
+                self.dfs(res)
+
 
 
     def get_reg_code_list(self):
@@ -172,7 +202,7 @@ class Crawl(object):
             # 如果是细缆页
             else:
                 self.path.append(block['name'])
-                print(self.path)
+                # print(self.path)
                 time.sleep(self.delay_time)
 
                 # 如果存在地区信息
@@ -203,11 +233,11 @@ class Crawl(object):
 
     def load_dup(self):
         """加载采集记录"""
-
+        filename = self.dbcode[self.selected_item]+".din"
         try:
-            f = open("dup_keys.info", 'r')
+            f = open(filename, 'r')
         except FileNotFoundError:
-            f = open("dup_keys.info", 'w', encoding='utf-8')
+            f = open(filename, 'w', encoding='utf-8')
         else:
             if f.read() != '':
                 f.seek(0)
@@ -266,7 +296,7 @@ class Crawl(object):
 
 
     def save_data(self, data_list):
-        # with open(self.selected_item+self.selected_time, 
+        # with open(self.selected_item+self.selected_time+, 
         #          'a', encoding='utf-8') as f:
         #     f.write(str(data_list)+'\n')
         self.sv.insert(data_list)

@@ -4,7 +4,7 @@ delay_time = 1
 load_error_wait_time = 15
 
 # 设置采集周期(分钟)
-update_cycle = 30
+# update_cycle = 30
 
 # 设置数据库相关信息
 sql_info = {

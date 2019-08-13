@@ -22,7 +22,7 @@ class Save(object):
     def init(self):
         self.cursor = self.conn.cursor()
         self.cursor.execute('CREATE DATABASE IF NOT EXISTS {}'.format(self.db_name))
-        self.cursor.execute('USE datastats')
+        self.cursor.execute('USE {}'.format(self.db_name))
 
         # 采集类别、各层级栏目、指标名称、发布日期、采集时间、指标数值、精确指标数值、数值单位、地区
         create_table_sql = ("CREATE TABLE IF NOT EXISTS {}("
