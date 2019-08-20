@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QPushButton,QLineEdit,
                             QGridLayout, QApplication)
 
 import sys
-import pyperclip
 import time
 
 
@@ -10,13 +9,12 @@ class FormatString(QWidget):
 
     def __init__(self):
         super().__init__()
-
+        self.clip = QApplication.clipboard()
         self.initUI()
 
     def product_value(self):
         l = self.t1.text()
         t = l.replace('/','-')
-        t = t + '-' + str(int(time.strftime('%m%d')))
         self.t2.setText(t+'-l.js')
         self.t3.setText(t+'-c.js')
         self.t4.setText(t+'-y.js')
@@ -45,10 +43,10 @@ class FormatString(QWidget):
         b4 = QPushButton('复制')
         b5 = QPushButton('复制')
         b1.clicked.connect(self.product_value)
-        b2.clicked.connect(lambda : pyperclip.copy(self.t2.text()))
-        b3.clicked.connect(lambda : pyperclip.copy(self.t3.text()))
-        b4.clicked.connect(lambda : pyperclip.copy(self.t4.text()))
-        b5.clicked.connect(lambda : pyperclip.copy(self.t5.text()))
+        b2.clicked.connect(lambda : self.clip.setText(self.t2.text()))
+        b3.clicked.connect(lambda : self.clip.setText(self.t3.text()))
+        b4.clicked.connect(lambda : self.clip.setText(self.t4.text()))
+        b5.clicked.connect(lambda : self.clip.setText(self.t5.text()))
 
 
 
