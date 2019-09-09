@@ -7,6 +7,9 @@ import time
 from progress import pros
 import random
 
+
+tag_name = 'GMP认证'
+
 def main():
 
     time.sleep(10)
@@ -14,10 +17,10 @@ def main():
     # 如果未加载重试3次
     for i in range(3):
         try:
-            driver.find_element_by_xpath("//td[contains(text(), '医疗器械经营企业（备案）')]").click()
+            driver.find_element_by_xpath("//td[contains(text(), '"+tag_name+"')]").click()
         except:
             time.sleep(10)
-            driver.find_element_by_xpath("//td[text()='医疗器械经营企业（备案）']").click()
+            driver.find_element_by_xpath("//td[text()='"+tag_name+"']").click()
         else:
             break
 
@@ -28,7 +31,7 @@ def write_current_page(page):
 def open_the_page(page_num):
     write_current_page(page_num)
     # 发现该元素，重新打开该页面
-    driver.find_element_by_xpath("//td[contains(text(), '医疗器械经营企业（备案）')]").click()
+    driver.find_element_by_xpath("//td[contains(text(), '"+tag_name+"')]").click()
     for _ in range(5):
         try:
             input_page = driver.find_element_by_xpath('//*[@id="goInt"]')
@@ -36,7 +39,7 @@ def open_the_page(page_num):
             input_page.send_keys(str(page_num))
             driver.find_element_by_xpath("//input[@src='images/dataanniu_11.gif']").click()
         except:
-            driver.find_element_by_xpath("//td[contains(text(), '医疗器械经营企业（备案）')]").click()
+            driver.find_element_by_xpath("//td[contains(text(), '"+tag_name+"')]").click()
             time.sleep(10)
         else:
             break
@@ -45,7 +48,7 @@ def get_urls(c):
     c.send(None)
     time.sleep(10)
     # 循环点击下一页
-    page_num = 14157
+    page_num = 971
 
     open_the_page(start_page)
 
@@ -77,7 +80,7 @@ def get_urls(c):
         else:
             write_current_page(i)
             with open('error.log', 'a') as f:
-                f.write(f'医疗器械经营企业（备案） Error in page {i}. {time.ctime()}')
+                f.write(f'"+tag_name+" Error in page {i}. {time.ctime()}')
             raise Exception('Page Load Error')
 
         for url in url_list:
@@ -103,13 +106,13 @@ def save():
     r = ''
     while True:
         results = yield r
-        with open('ylba.txt', 'a') as f:
+        with open('gmp.txt', 'a') as f:
             for i in results:
                 f.write(i+'\n')
 
 if __name__ == '__main__':
-    from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-    seed_url = ('http://qy1.sfda.gov.cn/datasearchcnda/face3/base.jsp?tableId=132&tableName=TABLE132&title=%D2%BD%C1%C6%C6%F7%D0%B5%C9%FA%B2%FA%C6%F3%D2%B5%A3%A8%D0%ED%BF%C9%A3%A9&bcId=154209313929078698414236686309')
+    # from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+    seed_url = 'http://qy1.sfda.gov.cn/datasearchcnda/face3/base.jsp?tableId=23&tableName=TABLE23&title=GMP%C8%CF%D6%A4&bcId=152911797956855568058860206743'
 
     # profile = FirefoxProfile()
     # 激活手动代理配置（对应着在 profile（配置文件）中设置首选项）
@@ -129,7 +132,7 @@ if __name__ == '__main__':
     # driver  = webdriver.Firefox(profile)
     with open('error.ini', 'r') as f:
         start_page = int(f.read().strip())
-
+    # driver = webdriver.Chrome()
     driver = webdriver.Firefox()
     driver.get(seed_url)
     main()

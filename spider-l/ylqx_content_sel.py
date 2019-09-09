@@ -23,7 +23,7 @@ def get_page(url):
         # insure the page is open
         try:
             driver.get(url)
-            time.sleep(0.1)
+            time.sleep(0.5)
         except:
             if _ == 80:
                 with open('contentd.log', 'a') as f:
@@ -33,20 +33,21 @@ def get_page(url):
             continue
         
         try:
-            driver.find_element_by_xpath("//center[1]/h1[contains(text(),'403')]")
+            driver.find_element_by_xpath("//center/h1[contains(text(),'403')]")
         except:
             pass
         else:
-            time.sleep(100)
+            print('\r403',end='\r')
+            time.sleep(30)
             continue
         
         # insure the data load over
-        for __ in range(31):
+        for __ in range(51):
             try:
-                driver.find_element_by_xpath(text1+"许可证编号"+text3)
+                driver.find_element_by_xpath(text1+"姓名"+text3)
             except Exception as e:
-                print(f'retry {__}', end='\r')
-                if _ == 80 and __ == 30:
+                print(f'\rretry {__}', end='\r')
+                if _ == 80 and __ == 50:
                     raise e
                 time.sleep(__*2)
             else:
@@ -58,7 +59,7 @@ def get_page(url):
 
 def main(urls):
     global r
-    filename = 'data'+str(int(start_time))+'.csv'
+    filename = 'zyys'+str(int(start_time))+'.csv'
 
 
     urls = urls[r-1 : ]#r+count-1]
@@ -66,8 +67,8 @@ def main(urls):
     for url in urls:
         # seed_url = 'http://qy1.sfda.gov.cn/datasearchcnda/face3/content.jsp?tableId=136&tableName=TABLE136&tableView=%E5%8C%BB%E7%96%97%E5%99%A8%E6%A2%B0%E7%BB%8F%E8%90%A5%E4%BC%81%E4%B8%9A%EF%BC%88%E8%AE%B8%E5%8F%AF%EF%BC%89&Id=94195'
 
-        if r % 5000 == 0:
-            filename = 'dataa'+str(int(start_time))+'.csv'
+        if r % 10000 == 0:
+            filename = 'zyss'+str(int(time.time()))+'.csv'
             
         get_page(url)
 
@@ -82,7 +83,7 @@ def main(urls):
         for i in range(len(titles)):
             # 写入excel
             # 参数对应 行, 列, 值
-            temp = temp + ',' + info[titles[i]].text.replace('\n', '')
+            temp = temp + ',' + info[titles[i]].text.replace(',','，').replace('\n', '')
             # worksheet.write(r,i,label=info[titles[i]].text)
             #workbook.save(bookname)
         with open(filename, 'a', encoding='utf-8') as f:
@@ -126,7 +127,7 @@ if __name__ == '__main__':
     # sheetname = '医疗器械经营许可'
     r =  get_start_num()
     start_num = r
-    count = 98138
+    # count = 98138
     # 创建一个workbook 设置编码
     # workbook = xlwt.Workbook(encoding = 'utf-8')
     # 创建一个worksheet
@@ -138,9 +139,8 @@ if __name__ == '__main__':
     # driver = webdriver.Firefox()
     driver.set_page_load_timeout(8)
     titles = [
-    '许可证编号','企业名称','法定代表人','企业负责人','住所',
-    '经营场所','经营方式','经营范围(2002分类)','经营范围(2017分类)',
-    '库房地址','发证部门','发证日期','有效期限','注',]
+    '姓名','注册证编号','执业地区','执业类别',
+    '执业范围','执业单位','有效期','注',]
     text1="//div[@class='listmain']/div/table[1]/tbody/tr/td[text()='"
     text3="']/following-sibling::td"
 
@@ -149,9 +149,9 @@ if __name__ == '__main__':
 
 
 
-    with open('ylqxjyxk.txt', 'r') as f:
+    with open('zyysqc.txt', 'r') as f:
         urls = f.readlines()
-
+    count = len(urls)
     try:
         main(urls)
     except Exception as e:
@@ -170,5 +170,3 @@ if __name__ == '__main__':
 
     driver.close()
     input('Press any key to quite.')
-
-    #10 80
